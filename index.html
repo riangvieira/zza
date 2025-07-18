@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Cotações de Moedas</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #0F1A24;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .card {
+      background: #0F1A24;
+      padding: 20px 25px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      text-align: center;
+      width: 280px;
+    }
+
+    .card h2 {
+      margin-top: 0;
+      font-size: 20px;
+      color: #ffffff;
+      margin-bottom: 15px;
+      font-weight: 600;
+    }
+
+    .moeda {
+      font-size: 18px;
+      margin: 12px 0;
+      color: #ffffff;
+      font-weight: bold;
+    }
+
+    .valor {
+      font-weight: bold;
+    }
+
+    .up {
+      color: #4caf50; /* verde para alta */
+    }
+
+    .down {
+      color: #f44336; /* vermelho para baixa */
+    }
+
+    .erro {
+      color: #FF6B6B;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <h2>Cotações de Hoje</h2>
+    <div class="moeda" id="dolar">Dólar: <span class="valor">carregando...</span></div>
+    <div class="moeda" id="euro">Euro: <span class="valor">carregando...</span></div>
+    <div class="moeda" id="cny">Yuan Chinês: <span class="valor">carregando...</span></div>
+  </div>
+
+  <script>
+    async function carregarCotacoes() {
+      try {
+        const resposta = await fetch('https://economia.awesomeapi.com.br/json/last/USD-BRL,EUR-BRL,CNY-BRL');
+        const dados = await resposta.json();
+
+        const dolar = dados.USDBRL;
+        const euro = dados.EURBRL;
+        const cny = dados.CNYBRL;
+
+        const dolarBid = parseFloat(dolar.bid);
+        const dolarOpen = parseFloat(dolar.open);
+        const euroBid = parseFloat(euro.bid);
+        const euroOpen = parseFloat(euro.open);
+        const cnyBid = parseFloat(cny.bid);
+        const cnyOpen = parseFloat(cny.open);
+
+        const dolarClass = dolarBid >= dolarOpen ? 'up' : 'down';
+        const euroClass = euroBid >= euroOpen ? 'up' : 'down';
+        const cnyClass = cnyBid >= cnyOpen ? 'up' : 'down';
+
+        document.getElementById('dolar').innerHTML = `Dólar: <span class="valor ${dolarClass}">R$ ${dolarBid.toFixed(2)}</span>`;
+        document.getElementById('euro').innerHTML = `Euro: <span class="valor ${euroClass}">R$ ${euroBid.toFixed(2)}</span>`;
+        document.getElementById('cny').innerHTML = `Yuan Chinês: <span class="valor ${cnyClass}">R$ ${cnyBid.toFixed(2)}</span>`;
+
+      } catch (erro) {
+        document.querySelector('.card').innerHTML = '<p class="erro">Erro ao carregar cotações.</p>';
+        console.error(erro);
+      }
+    }
+
+    carregarCotacoes();
+    setInterval(carregarCotacoes, 5 * 60 * 1000); // Atualiza a cada 5 min
+  </script>
+
+</body>
+</html>
