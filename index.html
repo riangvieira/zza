@@ -12,30 +12,29 @@
       justify-content: center;
       align-items: center;
       height: 100vh;
+      color: white;
+      font-weight: bold;
     }
 
     .card {
       background: #0F1A24;
-      padding: 20px 25px;
+      padding: 24px 28px;
       border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
       text-align: center;
       width: 280px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.4);
     }
 
     .card h2 {
       margin-top: 0;
       font-size: 20px;
-      color: #ffffff;
-      margin-bottom: 15px;
-      font-weight: 600;
+      color: #f75c03;
+      margin-bottom: 16px;
     }
 
     .moeda {
-      font-size: 18px;
-      margin: 12px 0;
-      color: #ffffff;
-      font-weight: bold;
+      font-size: 16px;
+      margin: 10px 0;
     }
 
     .valor {
@@ -43,15 +42,19 @@
     }
 
     .up {
-      color: #4caf50; /* verde para alta */
+      color: #00ff7f;
     }
 
     .down {
-      color: #f44336; /* vermelho para baixa */
+      color: #ff4040;
+    }
+
+    .neutral {
+      color: #f75c03;
     }
 
     .erro {
-      color: #FF6B6B;
+      color: #ff5f5f;
       font-weight: bold;
     }
   </style>
@@ -62,33 +65,45 @@
     <h2>Cotações de Hoje</h2>
     <div class="moeda" id="dolar">Dólar: <span class="valor">carregando...</span></div>
     <div class="moeda" id="euro">Euro: <span class="valor">carregando...</span></div>
-    <div class="moeda" id="cny">Yuan Chinês: <span class="valor">carregando...</span></div>
+    <div class="moeda" id="cny">Yuan (CNY): <span class="valor">carregando...</span></div>
   </div>
 
   <script>
+    async function buscarCotacao(base) {
+      const resHoje = await fetch(`https://api.exchangerate.host/latest?base=${base}&symbols=BRL`);
+      const hoje = await resHoje.json();
+
+      const resOntem = await fetch(`https://api.exchangerate.host/${getOntem()}?base=${base}&symbols=BRL`);
+      const ontem = await resOntem.json();
+
+      return {
+        hoje: hoje.rates.BRL,
+        ontem: ontem.rates.BRL
+      };
+    }
+
+    function getOntem() {
+      const d = new Date();
+      d.setDate(d.getDate() - 1);
+      return d.toISOString().split('T')[0];
+    }
+
+    function definirClasse(valorHoje, valorOntem) {
+      if (valorHoje > valorOntem) return 'up';
+      if (valorHoje < valorOntem) return 'down';
+      return 'neutral';
+    }
+
     async function carregarCotacoes() {
       try {
-        const resposta = await fetch('https://economia.awesomeapi.com.br/json/last/USD-BRL,EUR-BRL,CNY-BRL');
-        const dados = await resposta.json();
+        const moedas = ["USD", "EUR", "CNY"];
 
-        const dolar = dados.USDBRL;
-        const euro = dados.EURBRL;
-        const cny = dados.CNYBRL;
-
-        const dolarBid = parseFloat(dolar.bid);
-        const dolarOpen = parseFloat(dolar.open);
-        const euroBid = parseFloat(euro.bid);
-        const euroOpen = parseFloat(euro.open);
-        const cnyBid = parseFloat(cny.bid);
-        const cnyOpen = parseFloat(cny.open);
-
-        const dolarClass = dolarBid >= dolarOpen ? 'up' : 'down';
-        const euroClass = euroBid >= euroOpen ? 'up' : 'down';
-        const cnyClass = cnyBid >= cnyOpen ? 'up' : 'down';
-
-        document.getElementById('dolar').innerHTML = `Dólar: <span class="valor ${dolarClass}">R$ ${dolarBid.toFixed(2)}</span>`;
-        document.getElementById('euro').innerHTML = `Euro: <span class="valor ${euroClass}">R$ ${euroBid.toFixed(2)}</span>`;
-        document.getElementById('cny').innerHTML = `Yuan Chinês: <span class="valor ${cnyClass}">R$ ${cnyBid.toFixed(2)}</span>`;
+        for (let moeda of moedas) {
+          const dados = await buscarCotacao(moeda);
+          const classe = definirClasse(dados.hoje, dados.ontem);
+          const valorFormatado = dados.hoje.toFixed(2).replace('.', ',');
+          document.getElementById(moeda.toLowerCase()).innerHTML = `${moeda === 'CNY' ? 'Yuan (CNY)' : moeda === 'USD' ? 'Dólar' : 'Euro'}: <span class="valor ${classe}">R$ ${valorFormatado}</span>`;
+        }
 
       } catch (erro) {
         document.querySelector('.card').innerHTML = '<p class="erro">Erro ao carregar cotações.</p>';
@@ -97,7 +112,7 @@
     }
 
     carregarCotacoes();
-    setInterval(carregarCotacoes, 5 * 60 * 1000); // Atualiza a cada 5 min
+    setInterval(carregarCotacoes, 5 * 60 * 1000);
   </script>
 
 </body>
