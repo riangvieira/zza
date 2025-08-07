@@ -8,101 +8,65 @@
       margin: 0;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background-color: #0F1A24;
-      color: white;
+      color: #FFFFFF;
       display: flex;
-      justify-content: center;
       align-items: center;
+      justify-content: center;
       height: 100vh;
     }
-
     .card {
-      background-color: #1a2733;
-      padding: 25px 30px;
+      background: #0F1A24;
+      padding: 30px;
       border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
       text-align: center;
-      width: 320px;
+      width: 300px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.5);
     }
-
     .card h2 {
-      margin-top: 0;
-      font-size: 20px;
+      margin: 0 0 20px;
+      font-size: 22px;
       color: #FE6800;
-      margin-bottom: 20px;
     }
-
     .moeda {
-      font-size: 16px;
+      font-size: 18px;
       margin: 12px 0;
-      color: white;
       font-weight: bold;
     }
-
     .valor {
       color: #FE6800;
-      font-weight: bold;
     }
-
     .erro {
-      color: red;
-      font-weight: bold;
+      color: #FF6B6B;
       margin-top: 15px;
+      font-weight: bold;
     }
   </style>
 </head>
 <body>
-
   <div class="card">
     <h2>Cotações de Hoje</h2>
-    <div class="moeda" id="dolar">Dólar: <span class="valor">carregando...</span></div>
-    <div class="moeda" id="euro">Euro: <span class="valor">carregando...</span></div>
-    <div class="moeda" id="cny">Yuan: <span class="valor">carregando...</span></div>
+    <div class="moeda" id="dolar">Dólar: <span class="valor">…</span></div>
+    <div class="moeda" id="euro">Euro: <span class="valor">…</span></div>
+    <div class="moeda" id="cny">Yuan: <span class="valor">…</span></div>
     <div class="erro" id="erro"></div>
   </div>
 
   <script>
-    const API_URL = 'https://economia.awesomeapi.com.br/json/last/USD-BRL,EUR-BRL,CNY-BRL';
-    const CACHE_KEY = 'cotacoes_cache';
-    const CACHE_TIME_KEY = 'cotacoes_cache_time';
-    const CACHE_DURATION = 10 * 60 * 1000; // 10 minutos
-
     async function carregarCotacoes() {
-      const agora = Date.now();
-      const ultimoCache = localStorage.getItem(CACHE_TIME_KEY);
-
-      if (ultimoCache && (agora - parseInt(ultimoCache)) < CACHE_DURATION) {
-        const dadosCache = localStorage.getItem(CACHE_KEY);
-        if (dadosCache) {
-          mostrarCotacoes(JSON.parse(dadosCache));
-          return;
-        }
-      }
-
       try {
-        const resposta = await fetch(API_URL);
-        if (!resposta.ok) throw new Error('Erro na resposta da API');
-
-        const dados = await resposta.json();
-
-        // Salvar no cache
-        localStorage.setItem(CACHE_KEY, JSON.stringify(dados));
-        localStorage.setItem(CACHE_TIME_KEY, agora.toString());
-
-        mostrarCotacoes(dados);
-      } catch (erro) {
+        const today = await fetch('https://api.frankfurter.app/latest?from=BRL&to=USD,EUR,CNY');
+        const data = await today.json();
+        // Frankfurter returns rates as: 1 BRL = X USD, etc.
+        document.getElementById('dolar').innerHTML = `Dólar: <span class="valor">R$ ${(1/data.rates.USD).toFixed(4)}</span>`;
+        document.getElementById('euro').innerHTML = `Euro: <span class="valor">R$ ${(1/data.rates.EUR).toFixed(4)}</span>`;
+        document.getElementById('cny').innerHTML = `Yuan: <span class="valor">R$ ${(1/data.rates.CNY).toFixed(4)}</span>`;
+      } catch {
         document.getElementById('erro').textContent = 'Erro ao carregar cotações.';
-        console.error(erro);
       }
-    }
-
-    function mostrarCotacoes(dados) {
-      document.getElementById('dolar').innerHTML = `Dólar: <span class="valor">R$ ${parseFloat(dados.USDBRL.bid).toFixed(4)}</span>`;
-      document.getElementById('euro').innerHTML = `Euro: <span class="valor">R$ ${parseFloat(dados.EURBRL.bid).toFixed(4)}</span>`;
-      document.getElementById('cny').innerHTML = `Yuan: <span class="valor">R$ ${parseFloat(dados.CNYBRL.bid).toFixed(4)}</span>`;
     }
 
     carregarCotacoes();
+    setInterval(carregarCotacoes, 10 * 60 * 1000); // atualiza a cada 10 minutos
   </script>
-
 </body>
 </html>
