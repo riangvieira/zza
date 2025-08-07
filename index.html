@@ -7,8 +7,8 @@
     body {
       margin: 0;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background-color: #0F1A24;
-      color: #ffffff;
+      background: #0F1A24;
+      color: #FFFFFF;
       display: flex;
       justify-content: center;
       align-items: center;
@@ -16,34 +16,29 @@
     }
 
     .card {
-      background-color: #1a252f;
-      padding: 24px 28px;
+      background: #0F1A24;
+      padding: 30px;
       border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+      box-shadow: 0 0 20px rgba(0,0,0,0.4);
       text-align: center;
       width: 300px;
     }
 
     .card h2 {
       margin-top: 0;
-      font-size: 20px;
-      margin-bottom: 20px;
+      font-size: 22px;
       color: #FE6800;
+      margin-bottom: 20px;
     }
 
     .moeda {
-      font-size: 16px;
+      font-size: 18px;
       margin: 12px 0;
       font-weight: bold;
     }
 
     .valor {
       color: #FE6800;
-    }
-
-    .erro {
-      color: #ff5f5f;
-      font-weight: bold;
     }
   </style>
 </head>
@@ -53,32 +48,30 @@
     <h2>Cotações de Hoje</h2>
     <div class="moeda" id="dolar">Dólar: <span class="valor">carregando...</span></div>
     <div class="moeda" id="euro">Euro: <span class="valor">carregando...</span></div>
-    <div class="moeda" id="cny">CNY: <span class="valor">carregando...</span></div>
+    <div class="moeda" id="cny">Yuan: <span class="valor">carregando...</span></div>
   </div>
 
   <script>
-    const API_KEY = '08aa793e788d437bb619703ffd9667db';
-
     async function carregarCotacoes() {
       try {
-        const resposta = await fetch(`https://openexchangerates.org/api/latest.json?app_id=${API_KEY}&symbols=BRL,USD,EUR,CNY`);
+        const resposta = await fetch('https://economia.awesomeapi.com.br/json/last/USD-BRL,EUR-BRL,CNY-BRL');
         const dados = await resposta.json();
 
-        const usdToBrl = dados.rates.BRL / dados.rates.USD;
-        const eurToBrl = dados.rates.BRL / dados.rates.EUR;
-        const cnyToBrl = dados.rates.BRL / dados.rates.CNY;
+        const dolar = dados.USDBRL;
+        const euro = dados.EURBRL;
+        const cny = dados.CNYBRL;
 
-        document.getElementById('dolar').innerHTML = `Dólar: <span class="valor">R$ ${usdToBrl.toFixed(2)}</span>`;
-        document.getElementById('euro').innerHTML = `Euro: <span class="valor">R$ ${eurToBrl.toFixed(2)}</span>`;
-        document.getElementById('cny').innerHTML   = `CNY: <span class="valor">R$ ${cnyToBrl.toFixed(2)}</span>`;
+        document.getElementById('dolar').innerHTML = `Dólar: <span class="valor">R$ ${parseFloat(dolar.bid).toFixed(4)}</span>`;
+        document.getElementById('euro').innerHTML = `Euro: <span class="valor">R$ ${parseFloat(euro.bid).toFixed(4)}</span>`;
+        document.getElementById('cny').innerHTML = `Yuan: <span class="valor">R$ ${parseFloat(cny.bid).toFixed(4)}</span>`;
       } catch (erro) {
+        document.querySelector('.card').innerHTML = '<p style="color:red;font-weight:bold;">Erro ao carregar cotações.</p>';
         console.error(erro);
-        document.querySelector('.card').innerHTML = '<p class="erro">Erro ao carregar cotações.</p>';
       }
     }
 
     carregarCotacoes();
-    setInterval(carregarCotacoes, 6 * 60 * 60 * 1000); // atualiza a cada 6h
+    setInterval(carregarCotacoes, 5 * 60 * 1000); // Atualiza a cada 5 minutos
   </script>
 
 </body>
